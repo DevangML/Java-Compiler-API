@@ -16,8 +16,8 @@ public class CompilerController {
     }
 
     @PostMapping
-    public ResponseEntity<String> compileCode(@RequestBody String code) {
-        String output = compilerService.compileAndRun(code);
+    public ResponseEntity<String> compileCode(@RequestBody CodeRequest codeRequest) {
+        String output = compilerService.compileAndRun(codeRequest.getCode());
         return ResponseEntity.ok(output);
     }
 

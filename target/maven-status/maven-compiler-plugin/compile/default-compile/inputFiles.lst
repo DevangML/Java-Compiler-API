@@ -1,4 +1,5 @@
 /Users/devang/Desktop/lunar_container/alpine/NvChad/Java-Compiler-API/src/main/java/com/example/javacompiler/JavaCompilerApplication.java
+/Users/devang/Desktop/lunar_container/alpine/NvChad/Java-Compiler-API/src/main/java/com/example/javacompiler/config/SecurityConfig.java
 /Users/devang/Desktop/lunar_container/alpine/NvChad/Java-Compiler-API/src/main/java/com/example/javacompiler/controller/CompilerController.java
 /Users/devang/Desktop/lunar_container/alpine/NvChad/Java-Compiler-API/src/main/java/com/example/javacompiler/dto/CodeRequest.java
 /Users/devang/Desktop/lunar_container/alpine/NvChad/Java-Compiler-API/src/main/java/com/example/javacompiler/service/CompilerService.java
