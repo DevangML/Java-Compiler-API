@@ -11,6 +11,56 @@ public class CompilerService {
 
     private static final String BASE_DIR = "interactive_sessions/";
 
+    // Method for compiling and executing non-interactive code
+    public String compileAndRun(String code) {
+        String sessionId = UUID.randomUUID().toString();
+        String className = "Main";
+        String javaFile = BASE_DIR + sessionId + "/" + className + ".java";
+        File sessionDir = new File(BASE_DIR + sessionId);
+        if (!sessionDir.exists()) {
+            sessionDir.mkdirs();
+        }
+
+        File sourceFile = new File(javaFile);
+        try (PrintWriter out = new PrintWriter(sourceFile)) {
+            out.println(code);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return "Error: Unable to write source file.";
+        }
+
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        if (compiler == null) {
+            return "Error: Java compiler not available.";
+        }
+
+        ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
+        int compilationResult = compiler.run(null, null, errorStream, javaFile);
+        if (compilationResult != 0) {
+            return "Compilation failed: " + errorStream.toString();
+        }
+
+        try {
+            ProcessBuilder pb = new ProcessBuilder("java", "-cp", BASE_DIR + sessionId, className);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder output = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+            reader.close();
+
+            return output.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Error: Unable to execute compiled class.";
+        }
+    }
+
+    // Method for starting an interactive session
     public String startInteractiveSession(String code) {
         String sessionId = UUID.randomUUID().toString();
         String className = "Main";
@@ -33,9 +83,10 @@ public class CompilerService {
             return "Error: Java compiler not available.";
         }
 
-        int compilationResult = compiler.run(null, null, null, javaFile);
+        ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
+        int compilationResult = compiler.run(null, null, errorStream, javaFile);
         if (compilationResult != 0) {
-            return "Error: Compilation failed.";
+            return "Compilation failed: " + errorStream.toString();
         }
 
         return sessionId;

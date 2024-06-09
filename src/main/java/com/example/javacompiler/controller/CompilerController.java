@@ -16,10 +16,22 @@ public class CompilerController {
         this.compilerService = compilerService;
     }
 
+    @PostMapping("/run")
+    public ResponseEntity<String> compileAndRun(@RequestBody CodeRequest codeRequest) {
+        String result = compilerService.compileAndRun(codeRequest.getCode());
+        if (result.startsWith("Error:") || result.startsWith("Compilation failed:")) {
+            return ResponseEntity.badRequest().body(result);
+        }
+        return ResponseEntity.ok(result);
+    }
+
     @PostMapping("/start")
     public ResponseEntity<String> startInteractiveSession(@RequestBody CodeRequest codeRequest) {
-        String sessionId = compilerService.startInteractiveSession(codeRequest.getCode());
-        return ResponseEntity.ok(sessionId);
+        String result = compilerService.startInteractiveSession(codeRequest.getCode());
+        if (result.startsWith("Error:") || result.startsWith("Compilation failed:")) {
+            return ResponseEntity.badRequest().body(result);
+        }
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/interact/{sessionId}")
