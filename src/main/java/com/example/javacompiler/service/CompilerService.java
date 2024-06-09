@@ -4,20 +4,23 @@ import org.springframework.stereotype.Service;
 
 import javax.tools.*;
 import java.io.*;
-import java.util.Arrays;
+import java.util.UUID;
 
 @Service
 public class CompilerService {
 
-    public String compileAndRun(String code) {
-        return compileAndRunWithArgs(code, new String[]{});
-    }
+    private static final String BASE_DIR = "interactive_sessions/";
 
-    public String compileAndRunWithArgs(String code, String[] args) {
+    public String startInteractiveSession(String code) {
+        String sessionId = UUID.randomUUID().toString();
         String className = "Main";
-        String javaFile = className + ".java";
-        File sourceFile = new File(javaFile);
+        String javaFile = BASE_DIR + sessionId + "/" + className + ".java";
+        File sessionDir = new File(BASE_DIR + sessionId);
+        if (!sessionDir.exists()) {
+            sessionDir.mkdirs();
+        }
 
+        File sourceFile = new File(javaFile);
         try (PrintWriter out = new PrintWriter(sourceFile)) {
             out.println(code);
         } catch (FileNotFoundException e) {
@@ -35,14 +38,21 @@ public class CompilerService {
             return "Error: Compilation failed.";
         }
 
+        return sessionId;
+    }
+
+    public String runInteractiveSession(String sessionId, String[] inputs) {
+        String className = "Main";
+        String javaFile = BASE_DIR + sessionId + "/" + className + ".java";
+
         try {
-            ProcessBuilder pb = new ProcessBuilder("java", className);
+            ProcessBuilder pb = new ProcessBuilder("java", "-cp", BASE_DIR + sessionId, className);
             pb.redirectErrorStream(true);
             Process process = pb.start();
 
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-            for (String arg : args) {
-                writer.write(arg + "\n");
+            for (String input : inputs) {
+                writer.write(input + "\n");
             }
             writer.flush();
             writer.close();
@@ -51,6 +61,33 @@ public class CompilerService {
             StringBuilder output = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+            reader.close();
+
+            return output.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Error: Unable to execute compiled class.";
+        }
+    }
+
+    public String getInteractivePrompt(String sessionId) {
+        String className = "Main";
+        String javaFile = BASE_DIR + sessionId + "/" + className + ".java";
+
+        try {
+            ProcessBuilder pb = new ProcessBuilder("java", "-cp", BASE_DIR + sessionId, className);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder output = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) {
+                    break;
+                }
                 output.append(line).append("\n");
             }
             reader.close();
